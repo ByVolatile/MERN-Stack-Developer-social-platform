@@ -1,0 +1,14 @@
+.Account{
+    display: flex;
+    
+    color:white ;
+    width: 100%;
+    height: 92vh;
+    
+   
+    
+}
+
+.Account pre {
+    background-color: #0b0c10 !important;
+ }
