@@ -19,7 +19,7 @@ export const getUserData = (title) => async (dispatch) => {
   };
   export const Logout = () => (dispatch) => {
     localStorage.removeItem('user');
-    
+    localStorage.removeItem('token');
     dispatch({ type: "Logout",
   payload:null
   });

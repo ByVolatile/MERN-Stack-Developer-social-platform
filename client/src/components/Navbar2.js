@@ -4,53 +4,76 @@ import { Link } from "react-router-dom";
 import "../App.css";
 import "../css/Navbar.css";
 import Logo from "../search.svg";
+import Loading from "../refresh.png";
 import { useDispatch } from "react-redux";
 import { Logout } from "../actions/userData/user";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 
 import { useState } from "react";
 import { SearchUser } from "../axios";
 const Navbars = () => {
-
-  const userData = JSON.parse(localStorage.getItem("user"));
+  let userData= null;
+  try{
+    userData = JSON.parse(localStorage.getItem("user"))
+     
+    
+   }
+   catch{localStorage.removeItem('user');
+   
+  }
+  
+  
   const [searchData, setSearchData] = useState({ search: "" });
   const [username, setUserName] = useState();
+  const [profilePhoto,setProfilePhoto] = useState();
   const [visibility, setVisibility] = useState(0);
+  const [loadingGif, setLoadingGif] = useState(0);
   const [searchComplateData, setSearchComplateData] = useState([]);
   const [temp, setTemp] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location =useLocation()
   const logoutClick = () => {
     dispatch(Logout());
-    navigate("/");
+    navigate("/Login");
   };
 
   useEffect(()=>{
 
   },[temp])
+
+ 
   const searchHandler = (e) => {
     setSearchData({ ...searchData, search: e.target.value });
+    setSearchComplateData([])
+    setLoadingGif(1)
   };
   useEffect(()=>{
    function fonksiyon() {
-    if(visibility && localStorage.getItem("search")!=="undefined"){
+    if(visibility && localStorage.getItem("search")!=undefined){
       var x =(JSON.parse(localStorage.getItem("search")))
       setSearchComplateData(x)
       
     }
    }
    fonksiyon()
+   
   },[visibility])
   useEffect(() => {
-    
+    if(searchData.search.length<1){
+      setLoadingGif(0)
+    }
    
     if (searchData.search.length >= 1) {
       var node =   mySearchLogo.current
       node.classList.remove("rotating")
       SearchUser(searchData)
         .then((res) => {
+          setLoadingGif(0)
+          
           setSearchComplateData(res.data.user);
+
           localStorage.setItem('search',JSON.stringify(res.data.user))
          
           node.classList.remove("rotating")
@@ -64,18 +87,23 @@ const Navbars = () => {
         setSearchComplateData([]);
       }
       
+      
     }
+    
   }, [searchData]);
   useEffect(() => {
     if (userData) {
       setUserName(userData.username);
+     
+      setProfilePhoto(userData.photo)
     }
 
-    console.log("navbarrendered");
+    
   }, [userData]);
   const myRef = useRef();
   const mySearchLogo = useRef();
   const searchText = useRef();
+  const loadingRef = useRef();
 
   const handleClickOutside = e => {
    
@@ -158,14 +186,18 @@ useEffect(() => {
             color: "white",
             minHeight: "400px",
             maxHeight: "800px",
-            height:"400px",
+           
+            height:"auto",
             borderRadius:"5px",
-            
+            visibility:"auto",
+            wordW:"break-word",
+            overflowX:"auto"
             
           }}
           ref={myRef}
           
-        >
+        > 
+          {loadingGif===1 && searchComplateData && <img style={{height:"30px",width:"30px",position:"relative",top:"175px"}} ref={loadingRef} className="rotate spinner" src={Loading} alt="loading"></img>}
           {searchComplateData.map((data, key) => {
             
             return (
@@ -204,22 +236,47 @@ useEffect(() => {
           justifyContent: "space-around",
         }}
       >
-        <div>
-          {userData && <NavLink  to="/CreateQuestion">Paylaşım Yap</NavLink>}
+        <div >
+          {userData && <NavLink  to="/CreateQuestion">Paylaş</NavLink>}
         </div>
-        <div>
-          <NavLink to="/Editor">Online Editor</NavLink>
+        <div style={{marginLeft:"7px"}}>
+          <NavLink to="/Editor"> Editor</NavLink>
         </div>
 
         {userData != null && (
-          <div>
-            {" "}
-            <NavLink
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"auto"}}>
+          
+          
+             
+            <ul style={{height:"8vh"}}>
+            <li style={{width:"200px",height:"70%",cursor:"pointer",marginTop:"2.4vh"}} > {username}
+             {profilePhoto && <img
+                        style={{
+                          maxHeight: "50px",
+                          maxWidth: "50px",
+                          borderRadius: "50%",
+                          marginLeft:"10px"
+                        
+                        }}
+                        src={require(`../../../server/uploads/${profilePhoto}`)}
+                        alt="ProfilePhoto"
+                      ></img>}
+            <ul>
+              <li style={{position:"relative",top:"-5px"}}><NavLink
               className="text-decoration-none dropMenu"
               to={"/Account/" + username}
             >
-              Hesabım
-            </NavLink>{" "}
+              Hesabım </NavLink></li>
+              <li style={{position:"relative",top:"-5px"}}><NavLink
+              className="text-decoration-none dropMenu"
+              to={"/MyStars"}
+            >
+              Beğenilerim </NavLink></li>
+             
+            </ul>
+          </li>
+            </ul>
+           
           </div>
         )}
         {!userData && (

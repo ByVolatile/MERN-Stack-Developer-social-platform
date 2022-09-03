@@ -20,7 +20,7 @@ export const CreateSchema = Joi.object({
     
   });
   export const searchUserSchema = Joi.object({
-    search: Joi.string().required().min(1),
+    search: Joi.string().required().trim().min(1),
    
     
   });

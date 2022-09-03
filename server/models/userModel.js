@@ -7,7 +7,8 @@ const userSchema = mongoose.Schema({
     },
     email:{
         type:String,
-        required: true
+        required: true,
+        index: {unique: true, dropDups: true}
     },
     password:{
         type:String,
@@ -15,7 +16,8 @@ const userSchema = mongoose.Schema({
     },
     username:{
         type:String,
-        required: true
+        required: true,
+    
     },
     photo:{
         type:String,
@@ -25,8 +27,17 @@ const userSchema = mongoose.Schema({
 		type: Date,
 		default: Date.now,
 		required: 'Must have start date - default value is the created date'
-	}
+	},
+    followers: {
+        type: Array,
+        default: [],
+      },
+      followings: {
+        type: Array,
+        default: [],
+      }
    
 })
+userSchema.path('email').index({ unique: true });
 
 export default mongoose.model('User',userSchema)

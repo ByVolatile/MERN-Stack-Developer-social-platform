@@ -20,9 +20,15 @@ import {
   
 } from "./actions/tutorials";
 import { getUserData } from './actions/userData/user';
+import MyStars from './components/MyStars';
 
 
-
+try{
+ localStorage.getItem('user')
+  
+ 
+}
+catch{localStorage.removeItem('user');}
 
 function App() {
   
@@ -86,7 +92,7 @@ function App() {
      <Route path="/Questions" element={<Questions />}/>
         <Route path="/signup" element={<LoginForm  />}  /> 
       <Route path="/Editor" element={<CodeEditor />}/>
-     
+      <Route path="/MyStars" element={<MyStars />}/>
       <Route path="/Account/:username" element={<Account />}/>
       <Route path="/Question/:questionId" element={<Question />}/>
      

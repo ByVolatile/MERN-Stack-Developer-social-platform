@@ -16,7 +16,7 @@ const Register = () => {
     filename:null
   });
  
-
+  const [buttonText,setButtonText] = useState("Kaydı tamamla")
   const [preview, setPreview] = useState(null);
   
 
@@ -28,10 +28,27 @@ const Register = () => {
     console.log(data)
     Kayit(data)
       .then((res) => {
+        if(res.status==200)
+        {
+           setButtonText("Kayıt Başarılı Girişe yönlendiriliyorsunuz...")
+           setTimeout(() => {
+
+            navigate("/Login")
+          }, 1500);
+        }
+        
+        else setButtonText("Lütfen tekrar deneyin")
+        setTimeout(() => {
+
+          setButtonText("Kaydı tamamla")
+        }, 1500);
        console.log(res,"hello")
       })
       .catch((error) => {
-       console.log(error.message)
+        setButtonText(error.response.data.message)
+      
+        
+     
       });
   };
   const fileHandler = evt => {
@@ -162,8 +179,10 @@ const Register = () => {
           </Form.Group>
 
           <div className="d-grid gap-2">
-            <Button size="lg" type="submit" style={{backgroundColor:"#45a29e",borderRadius:"5px"}}>
-              Kaydı tamamla
+            <Button size="lg" type="submit" onClick={()=>{
+              setButtonText("İşlem sürüyor...")
+            }} style={{backgroundColor:"#45a29e",borderRadius:"5px"}}>
+          {  buttonText}
             </Button>
             <Form.Text className="text-center mt-2">
               Zaten bir hesabın var mı ? <Link to="/Login">Giriş Yap</Link>

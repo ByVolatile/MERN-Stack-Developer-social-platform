@@ -9,14 +9,26 @@ import Prism from "prismjs";
 import { Button } from "react-bootstrap";
 import "prismjs/themes/prism-tomorrow.css";
 import CommentListener from "./CommentListener";
+import { useRef } from "react";
+import { getStar,toggleStar } from "../axios";
 import { AddComment } from "../axios";
+import starLogo from "../starLogo.png";
 const Question = () => {
   const { questionId } = useParams();
   const [formData, setFormData] = useState({
     id:questionId,
     yorum:""
   });
-  
+  var kullaniciId;
+  var fullname;
+  var photo;
+  const [buttonText, setButtonText] = useState("Yorum yap");
+  if(JSON.parse(localStorage.getItem("user"))){
+     kullaniciId = JSON.parse(localStorage.getItem("user")).username;
+     fullname = JSON.parse(localStorage.getItem("user")).fullname;
+     photo = JSON.parse(localStorage.getItem("user")).photo;
+  }
+  let sayac = 0;
   var token = JSON.parse(localStorage.getItem("token"));
   const [commentData, setCommentData] = useState([]);
   const [postData, setPostData] = useState();
@@ -24,6 +36,22 @@ const Question = () => {
     var options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(string).toLocaleDateString([],options);
 }
+
+const [star,setStar] = useState([])
+  const [begenim,setBegenim] = useState(0)
+  const begeniYazisi = useRef();
+  const begeniSayisi = useRef();
+  const begeniText = useRef();
+
+  useEffect(() => {
+    getStar(questionId).then((data)=>{
+       
+      
+      setStar(data)
+      console.log(data)
+    }).catch(console.log("hata"))
+    Prism.highlightAll();
+},[questionId])
   useEffect(() => {
    
  
@@ -75,7 +103,7 @@ const Question = () => {
       > 
         
           
-        {postData &&  <div style={{ position: "fixed", top: "10%", left: "0px",border:"1px solid #66fcf1",borderRadius:"5px",padding:"10px" }}>
+        {postData &&  <div style={{ position: "fixed", top: "10%", left: "0px",border:"3px solid #66fcf1",borderRadius:"5px",padding:"10px" }}>
           
             <img
               src={require(`../../../server/uploads/${postData.postedBy.photo}`)}
@@ -140,15 +168,82 @@ const Question = () => {
                   }}
                 >
                   {parse(postData.yazi)}
-                </div>    
-               <div style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}> {formatDate(postData.start)}</div>
-              </div>
+                </div>
+              
+               <div style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+               <div><img src={starLogo} 
+            className="begeniLogo"
+            style={{height:"50px",width:"50px"}}
+            ref={begeniYazisi}
+      onClick={(e)=>{
+        console.log(questionId,token)
+        e.target.style.transition ="500ms"
+        setTimeout(() => {
+         
+          e.target.style.height ="70px";
+          e.target.style.width ="70px";
+        }, 0);
+       
+        setTimeout(() => {
+          e.target.style.height ="50px";
+          e.target.style.width ="50px";
+        }, 500);
+        if(begeniText.current != undefined){
+          if(begeniText.current.innerText =="Beğendin"){
+            begeniText.current.innerText ="Beğeni geri alındı"
+            begeniSayisi.current.innerText -=1;
+          }else if (begeniText.current.innerText =="" ){
+            begeniText.current.innerText ="Beğendin"
+           var sayi = begeniSayisi.current.innerText;
+           begeniSayisi.current.innerText = parseInt(sayi)+1;
+          }
+          else if(begeniText.current.innerText =="Beğeni geri alındı" ){
+            begeniText.current.innerText ="Beğendin"
+            var sayi = begeniSayisi.current.innerText;
+            begeniSayisi.current.innerText = parseInt(sayi)+1;
+          }
+        }
+      
+     
+          
+       
+       
+       
+        toggleStar(questionId,token).then(()=>{
+          /* if(sayac>0){
+            sayac = 0;
+            console.log(begeniYazisi.current.src=unStarLogo)
+          }else{
+            sayac =1;
+            console.log(begeniYazisi.current.src=starLogo)
+          }
+          console.log(sayac)*/
+           
+        }) 
+       
+      }}
+     
+      ></img>
+      {star &&star.data!=undefined  && <span ref={begeniSayisi}>{star.data.length}</span> }
+       {star && star.data!=undefined && kullaniciId&& star.data.map((data)=>{
+          console.log(data.starBy.username,kullaniciId,"aynılar mı ",data.starBy.username==kullaniciId)
+          
+          if(data.starBy.username===kullaniciId && sayac==0){
+            console.log("sayac bu",sayac)
+          sayac++;
+        
+          }
+          
+          })}
+         {sayac>0? <span ref={begeniText} style={{marginLeft:"10px"}}>Beğendin</span>:<span ref={begeniText} style={{marginLeft:"10px"}}></span> }
+                </div>
+                {formatDate(postData.start)} </div></div>
               <div className="yorumEkle" style={{width:"60%",height:"auto",margin:"auto"}}>
 
 
               <ReactQuill
           theme="snow"
-          
+          placeholder= "Bir şeyler yaz..."
           modules={modules}
           formats={formats}
           style={{
@@ -191,10 +286,31 @@ const Question = () => {
           }}
 
           onClick={()=>{
-            AddComment(formData,token)
+            setButtonText("Yorum gönderiliyor.")
+            AddComment(formData,token).then((res)=>{
+              console.log(res,"response")
+              if(res.status==200){
+                setButtonText("Yorum gönderildi")
+                var yorum = {
+                  createDate:Date.now(),
+                  paylasanId:{
+                    fullname,
+                    photo
+                  },
+                  yorum:formData.yorum,
+               
+                }
+                Prism.highlightAll();
+               console.log(commentData)
+               setCommentData(current => [... current, yorum]) 
+                setInterval(() => {
+                  setButtonText("Yorum yap")
+                }, 2500);
+              }
+            })
           }}
         >
-          Yorum Yap
+          {buttonText}
         </Button>
         
               </div>
@@ -204,7 +320,7 @@ const Question = () => {
            
           {" "} <div className="yorumlar" style={{width:"60%",backgroundColor:"",margin:"auto",marginTop:"50px"}}>{commentData && 
             
-            commentData.map((post, index) => (
+            commentData.map((post,index) => (
               <CommentListener post={post} key={index}  />
             ))
             
